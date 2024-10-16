@@ -3,11 +3,12 @@ import firebase_admin
 from firebase_admin import credentials, db
 import os
 
+# Construct the service account info
 service_account_info = {
     "type": "service_account",
     "project_id": "url-shrinker-client",
     "private_key_id": os.environ.get("PRIVATE_KEY_ID"),
-    "private_key": os.environ.get("PRIVATE_KEY").replace('\\n', '\n'),
+    "private_key": os.environ.get("PRIVATE_KEY"),
     "client_email": os.environ.get("CLIENT_EMAIL"),
     "client_id": os.environ.get("CLIENT_ID"),
     "auth_uri": "https://accounts.google.com/o/oauth2/auth",
@@ -17,12 +18,14 @@ service_account_info = {
     "universe_domain": "googleapis.com"
 }
 
+# Initialize the Firebase Admin SDK
 cred = credentials.Certificate(service_account_info)
-default_app = firebase_admin.initialize_app(cred_obj,  {
-	'databaseURL': 'https://url-shrinker-client-default-rtdb.firebaseio.com/'
-	})
+default_app = firebase_admin.initialize_app(cred, {
+    'databaseURL': 'https://url-shrinker-client-default-rtdb.firebaseio.com/'
+})
 
-app = Flask(__name__, static_folder='./build/static', template_folder="./build" )
+# Initialize Flask app
+app = Flask(__name__, static_folder='./build/static', template_folder="./build")
 
 @app.route("/")
 def hello_world():
@@ -34,10 +37,10 @@ def homepage():
 
 @app.route('/<path:generatedKey>', methods=['GET'])
 def fetch_from_firebase(generatedKey):
-    ref = db.reference("/"+ generatedKey)
+    ref = db.reference("/" + generatedKey)
     data = ref.get()
     if not data:
-        return '404 not found'
+        return '404 not found', 404  # Return a proper 404 response
     else:
         longURL = data['longURL']
         return redirect(longURL)
