@@ -5,7 +5,7 @@ import os
 
 service_account_info = {
     "type": "service_account",
-    "project_id": os.environ.get("GOOGLE_CLOUD_PROJECT"),
+    "project_id": "url-shrinker-client",
     "private_key_id": os.environ.get("PRIVATE_KEY_ID"),
     "private_key": os.environ.get("PRIVATE_KEY").replace('\\n', '\n'),
     "client_email": os.environ.get("CLIENT_EMAIL"),
