@@ -2,21 +2,25 @@ from flask import Flask, redirect, render_template
 import firebase_admin
 from firebase_admin import credentials, db
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Construct the service account info
 service_account_info = {
-    "type": "service_account",
-    "project_id": "url-shrinker-client",
-    "private_key_id": os.environ.get("PRIVATE_KEY_ID"),
-    "private_key": os.environ.get("PRIVATE_KEY"),
-    "client_email": os.environ.get("CLIENT_EMAIL"),
-    "client_id": os.environ.get("CLIENT_ID"),
-    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-    "token_uri": "https://oauth2.googleapis.com/token",
-    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-t9z5d%40url-shrinker-client.iam.gserviceaccount.com",
-    "universe_domain": "googleapis.com"
+  "type": "service_account",
+  "project_id": os.environ.get("PROJECT_ID"),
+  "private_key_id": os.environ.get("PRIVATE_KEY_ID"),
+  "private_key": os.environ.get("PRIVATE_KEY").replace('\\n', '\n'),
+  "client_email": os.environ.get("CLIENT_EMAIL"),
+  "client_id": os.environ.get("CLIENT_ID"),
+  "auth_uri": os.environ.get("AUTH_URI"),
+  "token_uri": os.environ.get("TOKEN_URI"),
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-t9z5d%40url-shrinker-client.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
 }
+
 
 # Initialize the Firebase Admin SDK
 cred = credentials.Certificate(service_account_info)
@@ -37,10 +41,22 @@ def homepage():
 
 @app.route('/<path:generatedKey>', methods=['GET'])
 def fetch_from_firebase(generatedKey):
+    # Ignore requests for favicon.ico and manifest.json
+    if generatedKey in ["favicon.ico", "manifest.json"]:
+        return '404 Not Found', 404
+
     ref = db.reference("/" + generatedKey)
     data = ref.get()
+
     if not data:
-        return '404 not found', 404  # Return a proper 404 response
+        return '404 Not Found', 404
     else:
-        longURL = data['longURL']
-        return redirect(longURL)
+        longURL = data.get('longURL')
+        if longURL:
+            return redirect(longURL)
+        else:
+            return 'Invalid data format', 400
+
+@app.route('/<path:filename>')
+def serve_static(filename):
+    return app.send_static_file(filename)
