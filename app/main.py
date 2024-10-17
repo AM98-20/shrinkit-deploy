@@ -41,22 +41,10 @@ def homepage():
 
 @app.route('/<path:generatedKey>', methods=['GET'])
 def fetch_from_firebase(generatedKey):
-    # Ignore requests for favicon.ico and manifest.json
-    if generatedKey in ["favicon.ico", "manifest.json"]:
-        return '404 Not Found', 404
-
-    ref = db.reference("/" + generatedKey)
+    ref = db.reference("/"+ generatedKey)
     data = ref.get()
-
     if not data:
-        return '404 Not Found', 404
+        return '404 not found'
     else:
-        longURL = data.get('longURL')
-        if longURL:
-            return redirect(longURL)
-        else:
-            return 'Invalid data format', 400
-
-@app.route('/<path:filename>')
-def serve_static(filename):
-    return app.send_static_file(filename)
+        longURL = data['longURL']
+        return redirect(longURL)
